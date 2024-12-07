@@ -11,19 +11,38 @@ import (
 var input string
 
 func ParseMemoryInput(input string) []string {
-	r, _ := regexp.Compile(`mul\(\d+,\d+\)`)
+	r, err := regexp.Compile(`mul\(\d+,\d+\)|do\(\)|don\'t\(\)`)
+	if err != nil {
+		fmt.Println("Error in Reg: ", err)
+	}
 	return r.FindAllString(input, -1)
 }
 
 func EvaluateInputs(inputCommands []string) (int, error) {
 	total := 0
-	r, _ := regexp.Compile(`\d+`)
+	isEnabled := true
+	commandReg, _ := regexp.Compile(`mul|don't|do`)
+	numReg, _ := regexp.Compile(`\d+`)
 
 	for _, command := range inputCommands {
-		inputs := r.FindAllString(command, -1)
-		numA, _ := strconv.Atoi(inputs[0])
-		numB, _ := strconv.Atoi(inputs[1])
-		total += numA * numB
+		res := commandReg.FindString(command)
+		switch res {
+		case "mul":
+			if !isEnabled {
+				continue
+			}
+
+			inputs := numReg.FindAllString(command, -1)
+			numA, _ := strconv.Atoi(inputs[0])
+			numB, _ := strconv.Atoi(inputs[1])
+			total += numA * numB
+		case "don't":
+			isEnabled = false
+		case "do":
+			isEnabled = true
+		default:
+			fmt.Println("INVALID COMMAND: ", command)
+		}
 	}
 	return total, nil
 }
