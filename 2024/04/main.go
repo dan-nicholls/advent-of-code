@@ -54,8 +54,31 @@ func CheckMatchInDirection(
 	return true
 }
 
-func CountMatchesAtPoint(data [][]rune, x, y int, matchedWord string) int {
+func CheckCrossMatch(data [][]rune, x, y int) bool {
+	word := "MAS"
+	l := len(word)
+
+	if x+l-1 >= len(data[0]) || y+l-1 >= len(data) {
+		return false
+	}
+
+	TopLeftMatch := CheckMatchInDirection(data, x, y, word, DownRight) ||
+		CheckMatchInDirection(data, x+l-1, y+l-1, word, UpLeft)
+	TopRightMatch := CheckMatchInDirection(data, x+l-1, y, word, DownLeft) ||
+		CheckMatchInDirection(data, x, y+l-1, word, UpRight)
+
+	return (TopLeftMatch && TopRightMatch)
+}
+
+func CountMatchesAtPoint(data [][]rune, x, y int, matchedWord string, searchCrosses bool) int {
 	count := 0
+
+	if searchCrosses {
+		if CheckCrossMatch(data, x, y) {
+			count++
+		}
+		return count
+	}
 
 	for _, d := range Directions {
 		if CheckMatchInDirection(data, x, y, matchedWord, d) {
@@ -66,14 +89,14 @@ func CountMatchesAtPoint(data [][]rune, x, y int, matchedWord string) int {
 	return count
 }
 
-func EvaluateWordSearch(input string) (int, error) {
+func EvaluateWordSearch(input string, searchCrosses bool) (int, error) {
 	grid := ParsingInputToGrid(input)
 	word := "XMAS"
 	totalMatches := 0
 
 	for y := 0; y < len(grid); y++ {
 		for x := 0; x < len(grid[y]); x++ {
-			totalMatches += CountMatchesAtPoint(grid, x, y, word)
+			totalMatches += CountMatchesAtPoint(grid, x, y, word, searchCrosses)
 		}
 	}
 
@@ -82,9 +105,15 @@ func EvaluateWordSearch(input string) (int, error) {
 
 func main() {
 	fmt.Println("Elf Word Search Evaluator")
-	result, err := EvaluateWordSearch(input)
+	result, err := EvaluateWordSearch(input, false)
 	if err != nil {
 		fmt.Println("Error evaluating input: ", err)
 	}
 	fmt.Println("Total occurances: ", result)
+
+	result, err = EvaluateWordSearch(input, true)
+	if err != nil {
+		fmt.Println("Error evaluating input: ", err)
+	}
+	fmt.Println("Total cross occurances: ", result)
 }
